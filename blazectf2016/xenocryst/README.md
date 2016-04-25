@@ -79,7 +79,7 @@ way to exploitation becomes clear:
 I'm interested in two dwords inside the VM code - the offset to the memory
 block which is used to pass parameters from BF code to system calls, which
 is positioned at `0x00012b30`, and the offset between the BF memory and
-real x85 memory, which is stored at `0x00012b44`. The BF memory starts at
+real x86 memory, which is stored at `0x00012b44`. The BF memory starts at
 `0x00250f04`, and to shorten the BF code I will read 255 bytes from
 `0x00012b04`, giving a relative offset of `0xffdc1c00`. I create a simple BF
 program that puts this byte sequence in BF memory:
