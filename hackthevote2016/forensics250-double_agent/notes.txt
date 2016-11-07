@@ -1,0 +1,28 @@
+AAAA f
+BBBB l
+CCCC a
+DDDD g
+EEEE {
+FFFF i
+GGGG t
+HHHH s
+IIII a
+JJJJ l
+KKKK l
+LLLL i
+MMMM n
+NNNN t
+OOOO h
+PPPP e
+QQQQ l
+RRRR i
+SSSS g
+TTTT a
+UUUU t
+VVVV u
+WWWW r
+XXXX e
+YYYY s
+ZZZZ }
+
+flag{itsallintheligatures}

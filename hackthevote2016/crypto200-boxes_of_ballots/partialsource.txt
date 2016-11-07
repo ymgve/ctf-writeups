@@ -1,0 +1,23 @@
+pad
+ 25 return instr + ' ' * (length - (len(instr) % length ))
+ 
+encrypt_block
+ 28    encobj = AES.new(key, AES.MODE_ECB)
+
+encrypt_cbc
+ 57    plaintext = pad(plaintext,len(key))
+ 62    ctxt = encrypt_block(key,ctxt)
+
+ 67    return ctxt
+ 
+ 
+encrypt_data
+ 97    enc = encrypt_cbc(self.key, self.iv, encData['data'])
+ 
+ 
+ 
+ 
+115    self.key = encData['key']
+
+117    op = encData['op']
+118    self.ops[op](encData) # just enc 4 now
