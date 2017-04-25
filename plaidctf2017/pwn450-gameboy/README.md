@@ -41,14 +41,14 @@ We spent a lot of time looking for implementation errors, but everything seemed 
 flaws. But then, we noticed that there was code for handling opcode `0xED` which is *not* part of the Gameboy CPU spec.
 The code seemed pretty straightforward at first glance:
 
-![Hex-Rays decompilation of opcode 0xED](./opcode_ed_hexrays.png)
+![Hex-Rays decompilation of opcode 0xED](./images/opcode_ed_hexrays.png)
 
 It simply XORs the content of VM memory address `0xff00+reg_C` with the content of register A. Doesn't seem
 exploitable.
 
 Oooooor....
 
-![Disassembly of opcode 0xED](./opcode_ed_disassembly.png)
+![Disassembly of opcode 0xED](./images/opcode_ed_disassembly.png)
 
 This is the disassembly of the same function. Notice how it uses **movsx** - the offset `reg_C` will actually be sign
 extended! This means we can actually modify memory right before the VM memory area too - right where the VM state is!
