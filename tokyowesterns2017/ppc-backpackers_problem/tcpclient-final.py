@@ -1,62 +1,5 @@
 import socket, struct, os, binascii, base64, random, itertools, time
 import telnetlib   
-
-def _int32(x):
-    # Get the 32 least significant bits.
-    return int(0xFFFFFFFF & x)
-
-class MT19937:
-    def __init__(self, seed):
-        # Initialize the index to 0
-        self.index = 624
-        self.mt = [0] * 624
-        self.mt[0] = seed  # Initialize the initial state to the seed
-        for i in range(1, 624):
-            self.mt[i] = _int32(
-                1812433253 * (self.mt[i - 1] ^ self.mt[i - 1] >> 30) + i)
-
-    def extract_number(self):
-        if self.index >= 624:
-            self.twist()
-
-        y = self.mt[self.index]
-
-        # Right shift by 11 bits
-        y = y ^ y >> 11
-        # Shift y left by 7 and take the bitwise and of 2636928640
-        y = y ^ y << 7 & 2636928640
-        # Shift y left by 15 and take the bitwise and of y and 4022730752
-        y = y ^ y << 15 & 4022730752
-        # Right shift by 18 bits
-        y = y ^ y >> 18
-
-        self.index = self.index + 1
-
-        return _int32(y)
-
-    def twist(self):
-        for i in range(624):
-            # Get the most significant bit and add it to the less significant
-            # bits of the next number
-            y = _int32((self.mt[i] & 0x80000000) +
-                       (self.mt[(i + 1) % 624] & 0x7fffffff))
-            self.mt[i] = self.mt[(i + 397) % 624] ^ y >> 1
-
-            if y % 2 != 0:
-                self.mt[i] = self.mt[i] ^ 0x9908b0df
-        self.index = 0
-
-    def twist_small(self):
-        for i in range(3):
-            # Get the most significant bit and add it to the less significant
-            # bits of the next number
-            y = _int32((self.mt[i] & 0x80000000) +
-                       (self.mt[(i + 1) % 624] & 0x7fffffff))
-            self.mt[i] = self.mt[(i + 397) % 624] ^ y >> 1
-
-            if y % 2 != 0:
-                self.mt[i] = self.mt[i] ^ 0x9908b0df
-        self.index = 0
         
 def readline(sc, show = True):
     res = ""
@@ -93,12 +36,67 @@ def read_all(sc, n):
 
     return data
 
-def I(n):
-    return struct.pack("<I", n)
-    
-def Q(n):
-    return struct.pack("<Q", n)
 
+# MT19937 implementation based on https://en.wikipedia.org/wiki/Mersenne_Twister#Python_implementation
+def _int32(x):
+    # Get the 32 least significant bits.
+    return int(0xFFFFFFFF & x)
+
+class MT19937:
+    def __init__(self, seed, initial_array=624):
+        # Initialize the index to 0
+        self.index = 624
+        self.mt = [0] * 624
+        self.mt[0] = seed  # Initialize the initial state to the seed
+        for i in range(1, initial_array):
+            self.mt[i] = _int32(
+                1812433253 * (self.mt[i - 1] ^ self.mt[i - 1] >> 30) + i)
+
+    def extract_number(self, temper=True):
+        if self.index >= 624:
+            self.twist()
+
+        y = self.mt[self.index]
+
+        if temper:
+            # Right shift by 11 bits
+            y = y ^ y >> 11
+            # Shift y left by 7 and take the bitwise and of 2636928640
+            y = y ^ y << 7 & 2636928640
+            # Shift y left by 15 and take the bitwise and of y and 4022730752
+            y = y ^ y << 15 & 4022730752
+            # Right shift by 18 bits
+            y = y ^ y >> 18
+
+        self.index = self.index + 1
+
+        return _int32(y)
+
+    def twist(self):
+        for i in range(624):
+            # Get the most significant bit and add it to the less significant
+            # bits of the next number
+            y = _int32((self.mt[i] & 0x80000000) +
+                       (self.mt[(i + 1) % 624] & 0x7fffffff))
+            self.mt[i] = self.mt[(i + 397) % 624] ^ y >> 1
+
+            if y % 2 != 0:
+                self.mt[i] = self.mt[i] ^ 0x9908b0df
+        self.index = 0
+
+    def twist_small(self):
+        for i in range(3):
+            # Get the most significant bit and add it to the less significant
+            # bits of the next number
+            y = _int32((self.mt[i] & 0x80000000) +
+                       (self.mt[(i + 1) % 624] & 0x7fffffff))
+            self.mt[i] = self.mt[(i + 397) % 624] ^ y >> 1
+
+            if y % 2 != 0:
+                self.mt[i] = self.mt[i] ^ 0x9908b0df
+        self.index = 0
+
+# generate all subset sums of the given set
 def gen_subsets(input):
     half = len(input)
     res = []
@@ -114,6 +112,7 @@ def gen_subsets(input):
         
     return res, bits
     
+# solve subset sum with meet-in-the-middle
 def solve(numbers):
     half = len(numbers)/ 2
     
@@ -139,6 +138,7 @@ def solve(numbers):
             
     return answer
 
+# untempering function from https://github.com/kmyk/mersenne-twister-predictor/blob/master/predict.py
 def untempering(y):
     y ^= (y >> 18)
     y ^= (y << 15) & 0xefc60000
@@ -146,22 +146,26 @@ def untempering(y):
     y ^= (y >> 11) ^ (y >> 22)
     return y
   
-def get_seeds(m227, m0):
-    m227 = untempering(m227)
-    m0 = untempering(m0)
-    res = []
-    y1 = (m227 ^ m0) << 1
-    y2 = (((m227 ^ m0 ^ 0x9908b0df) << 1) & 0xffffffff) | 1
-    for y0 in (y1, y2):
-        for extrabit in (0, 0x80000000):
-            y = y0 ^ extrabit
-            for i in xrange(228, 0, -1):
-                y = ((y - i) * 2520285293) & 0xffffffff
-                y = y ^ (y >> 30)
+def get_seeds(m0, m227):
+    seeds = []
+    
+    # original lower bit of y could have been either 0 or 1
+    y_even = (m227 ^ m0) << 1
+    y_odd = (((m227 ^ m0 ^ 0x9908b0df) << 1) & 0xffffffff) | 1
+    
+    for y in (y_even, y_odd):
+        # original upper bit of mt227 and mt228 could have been either 0 or 1
+        for oldm227_upperbit in (0, 0x80000000):
+            for oldm228_upperbit in (0, 0x80000000):
+                n = y ^ oldm227_upperbit ^ oldm228_upperbit
                 
-            res.append(y)
-        
-    return res
+                # invert the initial MT array function
+                for i in xrange(228, 0, -1):
+                    n = ((n - i) * 2520285293) & 0xffffffff
+                    n = n ^ (n >> 30)
+                    
+                seeds.append(n)
+    return seeds
 
 def find_valid_seed(pool1, pool3, fullpool):
     for i in xrange(len(pool1)):
@@ -171,11 +175,11 @@ def find_valid_seed(pool1, pool3, fullpool):
             
             res = get_seeds(a, b)
             for seed in res:
-                mt = MT19937(seed)
-                mt.twist_small()
+                mt = MT19937(seed, 400)     # speed hack, only partially make initial array
+                mt.twist_small()            # speed hack, don't do a full initial twist
                 good = 0
                 for k in xrange(3):
-                    if mt.extract_number() in fullpool:
+                    if mt.extract_number(False) in fullpool:    # speed hack, don't temper
                         good += 1
                     else:
                         break
@@ -190,6 +194,8 @@ def rand(mt):
     for i in xrange(4):
         r = (r << 32) | mt.extract_number()
         
+    # since the server RNG initially fills all 128 bits and the following 28 bit shift
+    # is arithmetic, not logical, we gotta ensure it has the right sign
     if (r >> 127) == 1:
         r = r - (1 << 128)
         
@@ -231,6 +237,7 @@ sc = socket.create_connection(("backpacker.chal.ctf.westerns.tokyo", 39581))
 fullpool = set()
 pool1 = []
 pool3 = []
+
 for i in xrange(3):
     print read_until(sc, "Input: \n")
     line = readline(sc, False)
@@ -238,24 +245,28 @@ for i in xrange(3):
     numbers = [int(x) for x in line.split()[1:]]
 
     for n2 in numbers:
-        n2 = int(n2)
         for n in n2, -n2:
             n = n >> 4
-            
+
+            # for each number, 3 complete PRNG output values are recovered
             a = (n >> 64) & 0xffffffff
             b = (n >> 32) & 0xffffffff
             c = (n >>  0) & 0xffffffff
             
-            fullpool.add(a)
-            fullpool.add(b)
-            fullpool.add(c)
-            
             if i == 0:
-                pool1.append(a)
+                # mt0 must be the first PRNG value of some number in the first problem set
+                pool1.append(untempering(a))
+            
+                # save all the others for later validation of the correct seed
+                fullpool.add(untempering(a))
+                fullpool.add(untempering(b))
+                fullpool.add(untempering(c))
             
             elif i == 2:
-                pool3.append(c)
+                # mt227 must be the third PRNG value of some number in the third problem set
+                pool3.append(untempering(c))
         
+    # properly solve the three first challenges
     answer = solve(numbers)
 
     res = " ".join(str(x) for x in sorted(answer))
@@ -268,16 +279,21 @@ if seed is None:
     exit()
     
 print "seed", seed
+
 mt = MT19937(seed)
+
 for i in (1,2,3):
+    # generate all the problem sets we've already seen
     gen_problem(i, mt)
 
 for i in xrange(4, 21):
     print read_until(sc, "Input: \n")
     line = readline(sc, False)
     
+    # we totally solved the NP problem, guys
     ret, answer = gen_problem(i, mt)
 
+    # sort and send
     res = " ".join(str(x) for x in sorted(answer))
     sc.send(str(len(answer)) + " " + res + "\n")
 
