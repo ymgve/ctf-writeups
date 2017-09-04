@@ -1,7 +1,9 @@
 # Backpacker's Problem - Programming - 177 points - 20 solvers
 
 > Enjoy PPC!
+>
 > `$ nc backpacker.chal.ctf.westerns.tokyo 39581`
+>
 > [backpacker-server.7z](./backpacker-server.7z-cac1702a29b9c29af680939d8b40e62325046c9d47faf5f7fdb322fb75c9f728)
 
 In this challenge we have to solve 20 [Subset sum](https://en.wikipedia.org/wiki/Subset_sum_problem) problems, in increasing difficulty from 10 items to 200 items. Subset sum is a variant of the [Knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem), which is where the challenge gets it name. As this problem is [NP-Complete](https://en.wikipedia.org/wiki/NP-completeness), the processing power required to solve a problem increases exponentially with the size of the problem.
