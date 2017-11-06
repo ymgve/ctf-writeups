@@ -1,4 +1,4 @@
-﻿#  完美無瑕~Impeccable Artifact~ - Exploitation/"Perfection" - 192 points - 72 teams solved
+﻿#  完美無瑕\~Impeccable Artifact\~ - Exploitation/"Perfection" - 192 points - 72 teams solved
 
 > Overwhelmingly consummate protection
 >
