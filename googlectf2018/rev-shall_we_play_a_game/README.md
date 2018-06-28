@@ -97,7 +97,7 @@ parameter definitions:
 I didn't fully work out all the details for the second and third integer in the arrays, but I assume they are
 static/class flags and number of paramters.
 
-Given all this, I started piecing together what happens in the code:
+Given all this, I started piecing together what happens in the GameActivity code:
 
 - On construction of GameActivity, a new `java.util.Random()` is created with a fixed PRNG seed
 - Then a 32-byte array `f2332q` is filled with 32 PRNG bytes with `nextBytes()`
