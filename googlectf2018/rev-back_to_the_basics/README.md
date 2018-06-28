@@ -193,7 +193,7 @@ That's a lot of new stuff! Let's examine it closer:
 - Line 2010 sets a floating point variable `V`
 - Line 2020-2021 takes the character values from the first and second characters in your password and places them in variables `BA` and `BB` (Note, BASIC is 1-indexed, not 0-indexed)
 - Line 2025-2034 sets 13 different floating point variables, depending on whether the corresponding bits in `BA` and `BB` were set
-- Line 2050-2100 adds all the values together and compares it with the goal variable `G`. Note the construction `TO = K = G`, which actually means `T0 = (K == G)` in other languages - sets `T0` to true (-1) or false (0)
+- Line 2050-2100 adds all the values together and compares it with the goal variable `G`. Note the construction `T0 = K = G`, which actually means `T0 = (K == G)` in other languages - sets `T0` to true (-1) or false (0)
 - Line 2900 re-obfuscates the previously de-obfuscated lines
 - Line 2905 draws a character in the progress bar, either a red X for failure or green heart for success
 - Line 2910 sets the line 2000 next line pointer to address `141d`, then goes back to line 2001
